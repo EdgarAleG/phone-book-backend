@@ -3,8 +3,19 @@ const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
 
+app.use(express.static("dist"));
+
+const requestLogger = (request, response, next) => {
+    console.log('Method:', request.method)
+    console.log('Path:  ', request.path)
+    console.log('Body:  ', request.body)
+    console.log('---')
+    next()
+}
+
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 morgan.token('body', (req) => { 
     if(req.method === 'POST' && req.body) {
@@ -14,12 +25,6 @@ morgan.token('body', (req) => {
 })
 app.use(morgan(":method :url :status - :response-time ms - :body"));
 
-   
-const bodyPage = `
- <h1>TItulo</h1>
- <p>Este es un parrafo</p>
- <h2>este un subtitulo</h2>
-`;
 
 let personsList = [
     { 
@@ -45,7 +50,7 @@ let personsList = [
 ]
 
 app.get("/", (request, response) => {
-    response.send(bodyPage);
+    response.send('<h1>Hola mundo</h1>');
 })
 
 app.get("/api/persons", (request, response) => {
@@ -107,11 +112,14 @@ app.post("/api/persons/", (request, response) => {
 
     personsList = personsList.concat(person);
 
-    //app.use(morgan(":method :url :status - :response-time ms :body"));
-    
     response.json(person);
-    
 })
+
+const unknownEndpint = (request, response) =>{
+    response.status(404).send({error: "unknown endpoint"});
+}
+
+app.use(unknownEndpint);
 
 const PORT = 3001;
 app.listen(PORT, () => {
